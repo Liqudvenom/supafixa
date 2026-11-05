@@ -2,8 +2,6 @@ import type { ReactNode } from 'react'
 import { REVIEW_PL, RISK_PL } from '../content'
 import { BASES, BOROUGH_RISK, REVIEWS, recordById } from '../data'
 import { useI18n } from '../i18n'
-import { PROFILES } from '../profiles'
-import type { ProfileId } from '../profiles'
 import type { BoroughRisk, MarketplaceRecord } from '../types'
 import { Icon } from './Icons'
 
@@ -169,21 +167,17 @@ export function ApplicationsPanel({
 export function SettingsPanel({
   baseId,
   pulse,
-  access,
   onClose,
   onBase,
   onPulse,
   onClear,
-  onAccess,
 }: {
   baseId: string
   pulse: boolean
-  access: Record<ProfileId, boolean>
   onClose: () => void
   onBase: (id: string) => void
   onPulse: () => void
   onClear: () => void
-  onAccess: (id: ProfileId) => void
 }) {
   const { t, lang, setLang } = useI18n()
   return (
@@ -212,19 +206,7 @@ export function SettingsPanel({
       <button type="button" className="btn ghost wide" onClick={onClear}>
         {t('settings.clear')}
       </button>
-      <h3>{t('settings.features')}</h3>
-      <p className="panel-intro">{t('settings.featuresIntro')}</p>
-      <div className="stack">
-        {PROFILES.map((profile) => (
-          <label key={profile.id} className="setting-row feature-row">
-            <span>
-              <strong>{profile.role[lang]}</strong>
-              <small>CLIENT_CHECK={access[profile.id] ? 'true' : 'false'}</small>
-            </span>
-            <input type="checkbox" className="switch" checked={access[profile.id]} onChange={() => onAccess(profile.id)} />
-          </label>
-        ))}
-      </div>
+      <p className="privacy-note">{t('settings.accessNote')}</p>
     </PanelShell>
   )
 }

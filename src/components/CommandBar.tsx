@@ -8,6 +8,7 @@ import { Icon } from './Icons'
 type Props = {
   query: string
   mode: Mode
+  allowedModes: Mode[]
   counts: Record<Mode, number>
   baseId: string
   borough: string
@@ -83,8 +84,8 @@ export function CommandBar(props: Props) {
           </button>
         </div>
 
-        <div className="modes" role="tablist" aria-label={t('search.modes')}>
-          {MODES.map((item) => (
+        {props.allowedModes.length > 1 && <div className="modes" role="tablist" aria-label={t('search.modes')}>
+          {MODES.filter((item) => props.allowedModes.includes(item.id)).map((item) => (
             <button
               key={item.id}
               type="button"
@@ -97,7 +98,7 @@ export function CommandBar(props: Props) {
               <span>{props.counts[item.id]}</span>
             </button>
           ))}
-        </div>
+        </div>}
 
         <div className={filtersOpen ? 'filters open' : 'filters'}>
           <label className="field">

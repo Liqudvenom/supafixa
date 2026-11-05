@@ -35,14 +35,13 @@ export type ProfileKpi = {
 
 export type DrawerClient = { report: AddressReport } | 'locked' | null
 
-const ALL_MODES: Mode[] = ['work', 'workers', 'companies']
 const BOOT_MS = 520
 
 function wait(ms: number) {
   return new Promise((done) => setTimeout(done, ms))
 }
 
-/** Product defaults for a profile. Demo grants come from `tt-access` on top of this. */
+/** Product defaults for a profile, including role-scoped marketplace views. */
 export function profileEnvironment(profileId: ProfileId): ProfileEnvironment {
   const profile = profileById(profileId)
   return {
@@ -56,7 +55,7 @@ export function profileEnvironment(profileId: ProfileId): ProfileEnvironment {
       jobAddressHint: profileId !== 'buyer',
     },
     defaultMode: profile.defaultMode,
-    allowedModes: ALL_MODES,
+    allowedModes: [...profile.allowedModes],
   }
 }
 
@@ -77,13 +76,11 @@ export async function loadProfileEnvironment(profileId: ProfileId): Promise<Prof
 /**
  * Live Client Check grant.
  *
- * Product default lives on `environment.entitlements.clientCheck` (business only)
- * and seeds `DEFAULT_ACCESS` / `tt-access`. The Settings checkboxes are a demo
- * override: they can grant the feature to seller/buyer or revoke it from
- * business. Production would be `entitlements.clientCheck && serverGrant`.
+ * Only the business entitlement exposes Client Check. In production this
+ * entitlement must also be verified by the server for the signed-in account.
  */
-export function effectiveClientCheck(environment: ProfileEnvironment, access: Record<ProfileId, boolean>) {
-  return access[environment.profileId] ?? environment.entitlements.clientCheck
+export function effectiveClientCheck(environment: ProfileEnvironment) {
+  return environment.entitlements.clientCheck
 }
 
 export type ProfileUiStats = {
@@ -130,14 +127,13 @@ export type ProfileUiConfig = {
 
 export function getProfileUiConfig(input: {
   environment: ProfileEnvironment
-  access: Record<ProfileId, boolean>
   view: View
   jobReport?: AddressReport
   stats: ProfileUiStats
   copy: ProfileUiCopy
 }): ProfileUiConfig {
-  const { environment, access, view, jobReport, stats, copy } = input
-  const clientCheck = effectiveClientCheck(environment, access)
+  const { environment, view, jobReport, stats, copy } = input
+  const clientCheck = effectiveClientCheck(environment)
   const showAddresses = view === 'clients' && clientCheck
   const { entitlements } = environment
 
@@ -179,4 +175,4 @@ export function getProfileUiConfig(input: {
 
 // TODO (phase 2): persist saved / applied / invited / enquired / last view per
 // ProfileId (`tt-session:<id>`) so seller and buyer sessions do not mix. This
-// iteration only stores `tt-profile` and `tt-access`.
+// iteration only stores `tt-profile`.

@@ -28,14 +28,24 @@ export type PostDraft = {
   postedHours?: number
 }
 
-export const SOURCES = [{ name: 'londynek.net', host: /(^|\.)londynek\.net$/ }]
+export const SOURCES = [
+  { name: 'londynek.net', host: /(^|\.)londynek\.net$/ },
+  {
+    name: 'Facebook · Praca w Londynie',
+    host: /^(?:www\.)?facebook\.com$/,
+    path: /^\/groups\/pracawlondynie(?:\/|$)/,
+  },
+]
 
 export function sourceOf(url: string) {
   try {
     const parsed = new URL(url)
-    if (!/^https?:$/.test(parsed.protocol)) return null
-    const known = SOURCES.find((source) => source.host.test(parsed.hostname))
-    return { name: known?.name ?? parsed.hostname.replace(/^www\./, ''), url: parsed.toString() }
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.port) return null
+    const known = SOURCES.find(
+      (source) => source.host.test(parsed.hostname) && (!source.path || source.path.test(parsed.pathname)),
+    )
+    if (!known) return null
+    return { name: known.name, url: parsed.toString() }
   } catch {
     return null
   }
@@ -222,8 +232,11 @@ function findEngagement(folded: string, duration: string, unit: PayUnit): Engage
 }
 
 export function readPost(raw: string, marker: string, titleFor: (kind: Kind, trade: string) => string): PostDraft {
-  const sourceUrl = /https?:\/\/(?:www\.)?londynek\.net\/\S+/i.exec(raw)?.[0] ?? ''
-  const { text, removed } = stripContacts(sourceUrl ? raw.replace(sourceUrl, '') : raw, marker)
+  const sourceCandidate = (raw.match(/https?:\/\/[^\s<>"']+/gi) ?? [])
+    .map((candidate) => candidate.replace(/[),.;!?]+$/, ''))
+    .find((candidate) => sourceOf(candidate))
+  const sourceUrl = sourceCandidate ? sourceOf(sourceCandidate)?.url ?? '' : ''
+  const { text, removed } = stripContacts(sourceCandidate ? raw.replace(sourceCandidate, '') : raw, marker)
   const folded = fold(raw)
   const workerish = WORKER_CUES.some((cue) => folded.includes(cue))
   const companyish = COMPANY_CUES.some((cue) => folded.includes(cue))

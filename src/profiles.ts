@@ -12,6 +12,7 @@ export type Profile = {
   role: Text
   note: Text
   defaultMode: Mode
+  allowedModes: Mode[]
   clientCheck: boolean
 }
 
@@ -25,6 +26,7 @@ export const PROFILES: Profile[] = [
     role: { pl: 'Fachowiec · Elektryk', en: 'Tradesperson · Electrician' },
     note: { pl: 'Sprzedajesz usługi i szukasz zleceń.', en: 'You sell your work and look for jobs.' },
     defaultMode: 'work',
+    allowedModes: ['work'],
     clientCheck: false,
   },
   {
@@ -34,6 +36,7 @@ export const PROFILES: Profile[] = [
     role: { pl: 'Zleceniodawca', en: 'Client' },
     note: { pl: 'Kupujesz usługi i szukasz fachowców.', en: 'You buy services and hire trades.' },
     defaultMode: 'workers',
+    allowedModes: ['workers', 'companies'],
     clientCheck: false,
   },
   {
@@ -46,16 +49,10 @@ export const PROFILES: Profile[] = [
       en: 'Selected business. You can read and leave reviews of client addresses.',
     },
     defaultMode: 'work',
+    allowedModes: ['work', 'workers', 'companies'],
     clientCheck: true,
   },
 ]
-
-/** Demo override seed for Client Check. Live grant is `tt-access`; see profileSession.ts. */
-export const DEFAULT_ACCESS: Record<ProfileId, boolean> = {
-  seller: false,
-  buyer: false,
-  business: true,
-}
 
 export function quickTarget(id: ProfileId): ProfileId {
   return id === 'buyer' ? 'seller' : 'buyer'

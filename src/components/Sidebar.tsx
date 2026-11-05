@@ -12,6 +12,7 @@ type Props = {
   mode: Mode
   open: boolean
   counts: Record<Mode, number>
+  allowedModes: Mode[]
   profile: Profile
   clientAccess: boolean
   onView: (view: View) => void
@@ -27,7 +28,7 @@ const modes: { id: Mode; label: Key; icon: IconName }[] = [
   { id: 'companies', label: 'nav.companies', icon: 'building' },
 ]
 
-export function Sidebar({ view, mode, open, counts, profile, clientAccess, onView, onMode, onClose, onAccount, locked }: Props) {
+export function Sidebar({ view, mode, open, counts, allowedModes, profile, clientAccess, onView, onMode, onClose, onAccount, locked }: Props) {
   const { t, lang } = useI18n()
   const onMap = view === 'map' || view === 'saved'
 
@@ -56,7 +57,7 @@ export function Sidebar({ view, mode, open, counts, profile, clientAccess, onVie
           <p className="nav-label">{t('nav.workspace')}</p>
           {item('map', 'map', 'nav.map')}
           <div className="nav-sub">
-            {modes.map((entry) => (
+            {modes.filter((entry) => allowedModes.includes(entry.id)).map((entry) => (
               <button
                 key={entry.id}
                 type="button"

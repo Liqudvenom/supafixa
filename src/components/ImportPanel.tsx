@@ -79,11 +79,13 @@ export function ImportPanel({ onClose, onAdd, onAddMany, sourcesOnMap }: Props) 
       <textarea
         className="paste-box"
         value={text}
+        maxLength={5000}
         onChange={(event) => setText(event.target.value)}
         placeholder={t('import.placeholder')}
         rows={6}
         aria-label={t('import.placeholder')}
       />
+      <p className="input-counter">{t('import.charCount', { n: text.length })}</p>
       <div className="import-row">
         <button type="button" className="btn quiet" onClick={() => sample('job')}>
           {t('import.sampleJob')}
@@ -133,7 +135,7 @@ export function ImportPanel({ onClose, onAdd, onAddMany, sourcesOnMap }: Props) 
           </label>
           <label className="form-field">
             <span>{t('import.titleField')}</span>
-            <input value={draft.title} onChange={(event) => patch({ title: event.target.value })} />
+            <input value={draft.title} maxLength={100} onChange={(event) => patch({ title: event.target.value })} />
           </label>
           <div className="form-pair">
             <label className="form-field">
@@ -220,14 +222,14 @@ export function ImportPanel({ onClose, onAdd, onAddMany, sourcesOnMap }: Props) 
           </div>
           <label className="form-field">
             <span>{t('import.summary')}</span>
-            <textarea rows={5} value={draft.summary} onChange={(event) => patch({ summary: event.target.value })} />
+            <textarea rows={5} maxLength={600} value={draft.summary} onChange={(event) => patch({ summary: event.target.value })} />
           </label>
           <label className="form-field">
             <span>{t('import.sourceUrl')}</span>
             <input
               type="url"
               inputMode="url"
-              placeholder="https://londynek.net/jobs/…"
+              placeholder="https://londynek.net/… or https://facebook.com/groups/pracawlondynie/…"
               value={draft.sourceUrl}
               aria-invalid={sourceBad}
               onChange={(event) => patch({ sourceUrl: event.target.value })}

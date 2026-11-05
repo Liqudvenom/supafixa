@@ -17,11 +17,11 @@ import { ApplicationsPanel, ReviewsPanel, RiskPanel, SettingsPanel } from './com
 import { BASES, RECORDS } from './data'
 import { I18nContext, makeI18n } from './i18n'
 import type { Lang } from './i18n'
-import { draftToRecord, stripContacts } from './importer'
+import { draftToRecord, sourceOf, stripContacts } from './importer'
 import type { PostDraft } from './importer'
 import { boroughCenter, boroughNames, kindMode, modeKind, place, visibleRecords } from './model'
 import { placeByName } from './places'
-import { DEFAULT_ACCESS, profileById, quickTarget } from './profiles'
+import { profileById, quickTarget } from './profiles'
 import type { ProfileId } from './profiles'
 import { getProfileUiConfig, loadProfileEnvironment, profileEnvironment } from './profileSession'
 import type { ProfileBoot } from './profileSession'
@@ -61,14 +61,6 @@ function initialProfile(): ProfileId {
   return stored === 'buyer' || stored === 'business' ? stored : 'seller'
 }
 
-function initialAccess(): Record<ProfileId, boolean> {
-  try {
-    return { ...DEFAULT_ACCESS, ...JSON.parse(readStore('tt-access') ?? '{}') }
-  } catch {
-    return DEFAULT_ACCESS
-  }
-}
-
 export default function App() {
   const [lang, setLangState] = useState<Lang>(initialLang)
   const [profileId, setProfileId] = useState<ProfileId>(initialProfile)
@@ -76,7 +68,6 @@ export default function App() {
   const [profileBoot, setProfileBoot] = useState<ProfileBoot>('ready')
   const [bootTarget, setBootTarget] = useState<ProfileId>(initialProfile)
   const [bootFading, setBootFading] = useState(false)
-  const [access, setAccess] = useState<Record<ProfileId, boolean>>(initialAccess)
   const [requested, setRequested] = useState<ProfileId[]>([])
   const [accountOpen, setAccountOpen] = useState(false)
   const [clientReviews, setClientReviews] = useState<ClientReview[]>(CLIENT_REVIEWS)
@@ -279,14 +270,6 @@ export default function App() {
     )
   }
 
-  const toggleAccess = (id: ProfileId) => {
-    setAccess((prev) => {
-      const next = { ...prev, [id]: !prev[id] }
-      writeStore('tt-access', JSON.stringify(next))
-      return next
-    })
-  }
-
   const selectAddress = (id: string | null) => {
     setAddressId(id)
     if (!id) return
@@ -394,7 +377,8 @@ export default function App() {
   }
 
   const reveal = (record: MarketplaceRecord, message: string) => {
-    setMode(kindMode(record.kind))
+    const recordMode = kindMode(record.kind)
+    setMode(environment.allowedModes.includes(recordMode) ? recordMode : environment.defaultMode)
     clearFilters()
     setView('map')
     setSelectedId(record.id)
@@ -436,6 +420,16 @@ export default function App() {
   const addImported = (draft: PostDraft) => {
     const where = placeByName(draft.place)
     if (!where) return
+    const source = draft.sourceUrl.trim()
+    const normalisedSource = source ? sourceOf(source)?.url : undefined
+    if (source && !normalisedSource) {
+      notify(t('import.sourceBad'))
+      return
+    }
+    if (normalisedSource && imported.some((record) => record.source?.url === normalisedSource)) {
+      notify(t('import.duplicate'))
+      return
+    }
     importSeq.current += 1
     const record = draftToRecord(draft, where, importSeq.current)
     setImported((prev) => [...prev, record])
@@ -450,12 +444,16 @@ export default function App() {
   const addImportedMany = (drafts: PostDraft[], skipped: number) => {
     const records: MarketplaceRecord[] = []
     let duplicates = 0
+    const seen = new Set(sourcesOnMap)
     for (const draft of drafts) {
       const where = placeByName(draft.place)
-      if (!where || sourcesOnMap.includes(draft.sourceUrl)) {
+      const source = draft.sourceUrl.trim()
+      const normalisedSource = source ? sourceOf(source)?.url : undefined
+      if (!where || (source && !normalisedSource) || (normalisedSource && seen.has(normalisedSource))) {
         duplicates += 1
         continue
       }
+      if (normalisedSource) seen.add(normalisedSource)
       importSeq.current += 1
       records.push(draftToRecord(draft, where, importSeq.current))
     }
@@ -482,7 +480,7 @@ export default function App() {
 
   const measureSheet = useCallback((height: number) => setSheetSpace(height + 22), [])
 
-  const alternate = (['work', 'workers', 'companies'] as const)
+  const alternate = environment.allowedModes
     .filter((item) => item !== mode)
     .map((item) => ({ mode: item, count: matchCounts[item] }))
     .sort((a, b) => b.count - a.count)[0]
@@ -512,7 +510,6 @@ export default function App() {
   const jobReport = jobAddress ? reports.find((report) => report.id === jobAddress) : undefined
   const ui = getProfileUiConfig({
     environment,
-    access,
     view,
     jobReport,
     stats: {
@@ -556,11 +553,13 @@ export default function App() {
         className={`workspace env-${booting ? bootTarget : profileId}${booting ? ' is-booting' : ''}`}
         aria-busy={booting}
       >
+        <a className="skip-link" href="#main-content">{t('a11y.skip')}</a>
         <Sidebar
           view={view}
           mode={mode}
           open={navOpen}
           counts={catalog}
+          allowedModes={environment.allowedModes}
           profile={profile}
           clientAccess={clientCheck}
           onView={chooseView}
@@ -572,10 +571,14 @@ export default function App() {
           }}
           locked={booting}
         />
-        <div className="main" inert={booting || undefined}>
+        <main id="main-content" className="main" tabIndex={-1} inert={booting || undefined}>
           <Header
-            title={t(view === 'clients' ? 'head.clientsTitle' : 'head.title')}
-            subtitle={t(view === 'clients' ? 'head.clientsSub' : 'head.subtitle')}
+            title={
+              view === 'clients'
+                ? t('head.clientsTitle')
+                : t(profileId === 'seller' ? 'head.dashboard.seller' : profileId === 'buyer' ? 'head.dashboard.buyer' : 'head.dashboard.business')
+            }
+            subtitle={view === 'clients' ? t('head.clientsSub') : profile.note[lang]}
             kpis={kpis}
             profile={profile}
             quickRole={profileById(quickTarget(profileId)).role[lang]}
@@ -638,6 +641,7 @@ export default function App() {
             <CommandBar
               query={query}
               mode={mode}
+              allowedModes={environment.allowedModes}
               counts={matchCounts}
               baseId={baseId}
               borough={borough}
@@ -763,8 +767,6 @@ export default function App() {
               <SettingsPanel
                 baseId={baseId}
                 pulse={pulse}
-                access={access}
-                onAccess={toggleAccess}
                 onClose={() => setView('map')}
                 onBase={changeBase}
                 onPulse={() => setPulse((value) => !value)}
@@ -787,11 +789,10 @@ export default function App() {
             onView={chooseView}
             onAccount={() => setAccountOpen((open) => !open)}
           />
-        </div>
+        </main>
         {accountOpen && !booting && (
           <AccountSheet
             profileId={profileId}
-            access={access}
             onSwitch={switchProfile}
             onSettings={() => chooseView('settings')}
             onClose={() => setAccountOpen(false)}

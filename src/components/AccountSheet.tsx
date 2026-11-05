@@ -5,13 +5,12 @@ import { Icon } from './Icons'
 
 type Props = {
   profileId: ProfileId
-  access: Record<ProfileId, boolean>
   onSwitch: (id: ProfileId) => void
   onSettings: () => void
   onClose: () => void
 }
 
-export function AccountSheet({ profileId, access, onSwitch, onSettings, onClose }: Props) {
+export function AccountSheet({ profileId, onSwitch, onSettings, onClose }: Props) {
   const { t, lang } = useI18n()
   const current = profileById(profileId)
   const quick = profileById(quickTarget(profileId))
@@ -53,9 +52,9 @@ export function AccountSheet({ profileId, access, onSwitch, onSettings, onClose 
                 <span className="profile-text">
                   <strong>{profile.role[lang]}</strong>
                   <small>{profile.note[lang]}</small>
-                  <span className={access[profile.id] ? 'flag on' : 'flag'}>
-                    {access[profile.id] ? <Icon name="check" size={12} /> : <Icon name="lock" size={12} />}
-                    {t('profile.feature')}: {t(access[profile.id] ? 'profile.on' : 'profile.off')}
+                  <span className={profile.clientCheck ? 'flag on' : 'flag'}>
+                    {profile.clientCheck ? <Icon name="check" size={12} /> : <Icon name="lock" size={12} />}
+                    {t('profile.feature')}: {t(profile.clientCheck ? 'profile.on' : 'profile.off')}
                   </span>
                 </span>
                 {active && <em>{t('profile.active')}</em>}
