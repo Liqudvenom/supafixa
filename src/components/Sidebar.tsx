@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n'
 import type { Key } from '../i18n'
-import type { Profile } from '../profiles'
+import { PROFILES, type Profile, type ProfileId } from '../profiles'
+import { SUPAFIXA_OFFERS_URL } from '../supafixa'
 import type { Mode, View } from '../types'
 import { Icon } from './Icons'
 import type { IconName } from './Icons'
@@ -19,6 +20,7 @@ type Props = {
   onMode: (mode: Mode) => void
   onClose: () => void
   onAccount: () => void
+  onSwitch: (id: ProfileId) => void
   locked?: boolean
 }
 
@@ -28,7 +30,7 @@ const modes: { id: Mode; label: Key; icon: IconName }[] = [
   { id: 'companies', label: 'nav.companies', icon: 'building' },
 ]
 
-export function Sidebar({ view, mode, open, counts, allowedModes, profile, clientAccess, onView, onMode, onClose, onAccount, locked }: Props) {
+export function Sidebar({ view, mode, open, counts, allowedModes, profile, clientAccess, onView, onMode, onClose, onAccount, onSwitch, locked }: Props) {
   const { t, lang } = useI18n()
   const onMap = view === 'map' || view === 'saved'
 
@@ -96,6 +98,13 @@ export function Sidebar({ view, mode, open, counts, allowedModes, profile, clien
               <small>{t('nav.groupNote')}</small>
             </span>
           </a>
+          <a className="nav-item nav-link" href={SUPAFIXA_OFFERS_URL} target="_blank" rel="noopener noreferrer">
+            <Icon name="external" />
+            <span>
+              {t('nav.supafixa')}
+              <small>{t('nav.supafixaNote')}</small>
+            </span>
+          </a>
 
           <p className="nav-label">{t('nav.insight')}</p>
           {item('reviews', 'star', 'nav.reviews')}
@@ -105,6 +114,24 @@ export function Sidebar({ view, mode, open, counts, allowedModes, profile, clien
           {item('settings', 'settings', 'nav.settings')}
         </nav>
 
+        <div className="profile-rail" role="group" aria-label={t('profile.title')}>
+          {PROFILES.map((entry) => {
+            const active = entry.id === profile.id
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                className={active ? `rail-avatar on ${entry.id}` : `rail-avatar ${entry.id}`}
+                aria-pressed={active}
+                aria-label={active ? `${t('profile.active')}: ${entry.role[lang]}` : t('profile.switchTo', { role: entry.role[lang] })}
+                title={entry.role[lang]}
+                onClick={() => onSwitch(entry.id)}
+              >
+                {entry.initials}
+              </button>
+            )
+          })}
+        </div>
         <button type="button" className="profile-card" onClick={onAccount}>
           <span className={`avatar ${profile.id}`}>{profile.initials}</span>
           <span>

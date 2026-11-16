@@ -94,6 +94,203 @@ h1, h2, h3, p { margin: 0; }
 }
 @keyframes boot-spin { to { transform: rotate(360deg); } }
 
+.dump-boot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: color-mix(in srgb, var(--bg) 55%, rgb(135, 190, 255));
+  overflow: hidden;
+}
+.dump-boot h2 { font-size: 18px; letter-spacing: -0.02em; color: var(--wine); text-align: center; }
+.dump-boot > p { margin: 0; font-size: 13px; color: var(--muted); text-align: center; max-width: 28rem; }
+.dump-scene {
+  --dump-r: rgb(255, 63, 48);
+  --dump-rt: rgba(255, 63, 48, 0);
+  --dump-w: rgba(255, 255, 255, 0.15);
+  --dump-wt: rgba(255, 255, 255, 0);
+  --dump-bk: rgb(40, 40, 40);
+  --dump-bkt: rgba(40, 40, 40, 0);
+  --dump-tbk: rgba(0, 0, 0, 0.15);
+  --dump-dbr: rgb(100, 50, 50);
+  --dump-dgy: rgb(80, 80, 80);
+  --dump-lgy: rgb(160, 160, 160);
+  --dump-br: rgb(127, 91, 88);
+  position: relative;
+  width: min(28.5em, 94vw);
+  height: 12.2em;
+  font-size: clamp(13px, 3.1vw, 18px);
+  overflow: hidden;
+}
+.dump-scene .progress-container,
+.dump-scene .progress-state,
+.dump-scene .dump-truck,
+.dump-scene .dump-truck div {
+  position: absolute;
+}
+.dump-scene .progress-container,
+.dump-scene .progress-box { width: 6em; }
+.dump-scene .progress-container {
+  top: 3.5em;
+  left: 3.6em;
+  height: 4em;
+  z-index: 2;
+}
+.dump-scene .progress-box {
+  border-radius: 0 0 0.5em 0.5em;
+  border: 0.5em solid var(--dump-dgy);
+  border-top: 0;
+  height: 4em;
+  overflow: hidden;
+}
+.dump-scene .progress-fill {
+  width: 100%;
+  height: 100%;
+  background: var(--dump-dbr);
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
+  animation: dumpFill 2.2s ease-out forwards;
+}
+.dump-scene .progress-state {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  font-size: 1.05em;
+  font-weight: 700;
+  text-align: center;
+  color: var(--wine);
+  z-index: 3;
+}
+.dump-scene .state-load { animation: dumpHideLoad 2.2s linear forwards; }
+.dump-scene .state-finish {
+  visibility: hidden;
+  animation: dumpShowFinish 0.28s 2.2s linear forwards;
+}
+.dump-scene .dump-truck {
+  top: 0.15em;
+  left: 10.2em;
+  width: 14em;
+  height: 8em;
+  opacity: 0;
+  z-index: 1;
+  animation: dumpArrive 2.2s ease-in-out forwards;
+}
+.dump-scene .front {
+  background:
+    linear-gradient(var(--dump-r), var(--dump-r)) 2.7em 0.75em / 0.2em 2em,
+    linear-gradient(var(--dump-lgy), var(--dump-lgy)) 1em 3.5em / 0.8em 0.2em,
+    linear-gradient(var(--dump-dgy), var(--dump-dgy)) 3.3em 6.1em / 0.5em 0.2em,
+    linear-gradient(var(--dump-dgy), var(--dump-dgy)) 3.3em 6.8em / 0.5em 0.2em,
+    linear-gradient(83deg, var(--dump-bk) 49%, var(--dump-bkt) 50%) 1em 0.75em / 5em 2em,
+    radial-gradient(3.4em 4.6em at 33% 100%, var(--dump-wt) 49%, var(--dump-w) 50%, var(--dump-w) 59%, var(--dump-wt) 60%),
+    radial-gradient(3.4em 4.6em at 33% 100%, var(--dump-rt) 49%, var(--dump-r) 50%);
+  background-repeat: no-repeat;
+  border-radius: 10% 20% 5% 25% / 10% 50% 5% 100%;
+  top: 0.4em;
+  left: 10.1em;
+  width: 3.9em;
+  height: 7em;
+}
+.dump-scene .bucket {
+  background:
+    repeating-linear-gradient(95deg, transparent, transparent 0.85em, var(--dump-tbk) 0.9em, var(--dump-tbk) 1.75em, var(--dump-tbk) 1.8em) 0.1em 1.6em / 7.8em 3.2em,
+    linear-gradient(var(--dump-dgy), var(--dump-dgy)) 8em 0 / 2em 0.5em,
+    linear-gradient(95deg, transparent 0.45em, var(--dump-dgy) 0.5em, var(--dump-dgy) 1.45em, transparent 1.5em) 7em 0 / 1.6em 5.5em,
+    linear-gradient(transparent 1em, var(--dump-dgy) 1em) 0 0 / 7.5em 5.5em;
+  background-repeat: no-repeat;
+  border-radius: 0 0 0 25% / 0 0 0 15%;
+  top: 0;
+  left: 0;
+  width: 10em;
+  height: 5.5em;
+  transform-origin: 22% 100%;
+  animation: dumpBucket 2.2s linear forwards;
+}
+.dump-scene .dirt {
+  background: var(--dump-dbr);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  top: 1.1em;
+  left: -3.2em;
+  width: 7.4em;
+  height: 3em;
+  transform: rotate(-25deg);
+  transform-origin: 50% 0;
+  z-index: -1;
+  animation: dumpRotateDirt 2.2s linear forwards;
+}
+.dump-scene .dirt-spill {
+  background: var(--dump-dbr);
+  border-radius: 0.4em;
+  top: 0;
+  left: -5.25em;
+  width: 5.5em;
+  height: 0.8em;
+  transform: rotate(-40deg) scale(1, 1);
+  transform-origin: 5.25em 0;
+  animation: dumpPour 2.2s linear forwards;
+}
+.dump-scene .base {
+  background: var(--dump-br);
+  border-radius: 0.25em;
+  top: 5.5em;
+  left: 2em;
+  width: 8.3em;
+  height: 1.5em;
+}
+.dump-scene .wheel {
+  background:
+    radial-gradient(100% 100%, var(--dump-bk) 9%, var(--dump-bkt) 10%),
+    radial-gradient(100% 100%, var(--dump-lgy) 29%, transparent 30%),
+    linear-gradient(90deg, var(--dump-w) 49%, var(--dump-wt) 50%),
+    radial-gradient(100% 100%, var(--dump-bk) 49%, var(--dump-bkt) 50%);
+  border-radius: 50%;
+  bottom: 0;
+  width: 2.4em;
+  height: 2.4em;
+  animation: dumpSpin 2.2s ease-in-out forwards;
+}
+.dump-scene .wheel-front { left: 10.4em; }
+.dump-scene .wheel-middle { left: 4.5em; }
+.dump-scene .wheel-back { left: 2em; }
+@keyframes dumpArrive {
+  from, 8% { opacity: 0; transform: translateX(16em); }
+  28%, to { opacity: 1; transform: translateX(0); }
+}
+@keyframes dumpBucket {
+  from, 28%, 72%, to { transform: rotate(0deg); }
+  38%, 58% { transform: rotate(-28deg); }
+}
+@keyframes dumpRotateDirt {
+  from, 37%, 62%, to { opacity: 0; }
+  38%, 58% { opacity: 1; transform: rotate(-28deg); }
+  48% { transform: rotate(-25deg); }
+}
+@keyframes dumpPour {
+  from, 38% { transform: rotate(-28deg) scale(0, 0); }
+  46% { transform: rotate(-28deg) scale(1, 1); }
+  58%, to { transform: rotate(-25deg) scale(0.8, 0); }
+}
+@keyframes dumpSpin {
+  from { transform: rotate(0); }
+  28%, to { transform: rotate(-2.1turn); }
+}
+@keyframes dumpFill {
+  from { transform: scaleY(0); }
+  32% { transform: scaleY(0.12); }
+  to { transform: scaleY(1); }
+}
+@keyframes dumpHideLoad {
+  from { visibility: visible; }
+  99% { visibility: visible; }
+  to { visibility: hidden; }
+}
+@keyframes dumpShowFinish {
+  from { transform: scale(0); visibility: visible; }
+  80% { transform: scale(1.12); }
+  to { transform: scale(1); visibility: visible; }
+}
+
 .sidebar {
   background: var(--panel);
   border-right: 1px solid var(--line);
@@ -102,6 +299,30 @@ h1, h2, h3, p { margin: 0; }
   flex-direction: column;
   min-height: 0;
 }
+.profile-rail {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 4px 0;
+}
+.rail-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  border: 2px solid var(--surface);
+  box-shadow: var(--shadow-sm);
+  color: white;
+  font-size: 12px;
+  font-weight: 750;
+  display: grid;
+  place-items: center;
+}
+.rail-avatar.seller { background: var(--crimson); }
+.rail-avatar.buyer { background: #1f6d8c; }
+.rail-avatar.business { background: var(--wine); box-shadow: inset 0 0 0 2px #e6c27a, var(--shadow-sm); }
+.rail-avatar.on { outline: 2px solid var(--env, var(--crimson)); outline-offset: 2px; }
+.rail-avatar:hover { transform: translateY(-2px); }
 .brand { display: flex; align-items: center; gap: 10px; padding: 2px 8px 14px; }
 .brand-mark {
   width: 32px; height: 32px; border-radius: 10px; background: var(--crimson); color: white;
@@ -144,7 +365,7 @@ h1, h2, h3, p { margin: 0; }
 .sidebar-note { padding: 10px 8px 0; color: var(--faint); font-size: 12px; }
 .nav-scrim { display: none; }
 .profile-card {
-  margin-top: auto;
+  margin-top: 8px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -395,7 +616,10 @@ h1, h2, h3, p { margin: 0; }
 .pin.worker { background: #1f9d57; }
 .pin.company { background: #6d5ef0; }
 .pin.urgent { background: #e07b22; }
-.pin.selected { box-shadow: 0 0 0 3px white, 0 0 0 6px rgba(163, 18, 58, 0.6), 0 8px 16px rgba(42, 26, 29, 0.3); }
+.pin.selected {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 3px white, 0 0 0 6px rgba(163, 18, 58, 0.6), 0 8px 16px rgba(42, 26, 29, 0.3);
+}
 .pin-pulse {
   position: absolute;
   inset: -6px;
@@ -1478,21 +1702,26 @@ h1, h2, h3, p { margin: 0; }
   max-height: none;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  grid-auto-rows: max-content;
   align-content: start;
+  align-items: stretch;
+  gap: 12px;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-snap-type: none;
-  padding: 8px 3px;
+  padding: 8px 3px 12px;
 }
 .opp-card {
   width: 100%;
   min-width: 0;
-  min-height: 230px;
+  height: auto;
+  min-height: max-content;
   padding: 15px;
   gap: 8px;
   scroll-snap-align: none;
+  overflow: hidden;
 }
-.opp-card h3 { font-size: 18px; line-height: 1.3; }
+.opp-card h3 { font-size: 18px; line-height: 1.3; overflow-wrap: anywhere; }
 .summary { font-size: 14px; line-height: 1.5; -webkit-line-clamp: 3; }
 .fare { font-size: 15px; }
 .card-actions { gap: 8px; }

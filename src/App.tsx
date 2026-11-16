@@ -8,12 +8,13 @@ import { CommandBar } from './components/CommandBar'
 import { TabBar } from './components/TabBar'
 import { DetailDrawer } from './components/DetailDrawer'
 import { Header } from './components/Header'
-import { ProfileLoadingScreen } from './components/ProfileLoadingScreen'
+import { DumpTruckLoader } from './components/DumpTruckLoader'
 import { ImportPanel } from './components/ImportPanel'
 import { Legend, MapCanvas } from './components/MapCanvas'
 import { OpportunitySheet, actionLabel } from './components/OpportunitySheet'
 import { Sidebar } from './components/Sidebar'
 import { ApplicationsPanel, ReviewsPanel, RiskPanel, SettingsPanel } from './components/SidePanels'
+import { postTitle } from './content'
 import { BASES, RECORDS } from './data'
 import { I18nContext, makeI18n } from './i18n'
 import type { Lang } from './i18n'
@@ -25,6 +26,7 @@ import { profileById, quickTarget } from './profiles'
 import type { ProfileId } from './profiles'
 import { getProfileUiConfig, loadProfileEnvironment, profileEnvironment } from './profileSession'
 import type { ProfileBoot } from './profileSession'
+import { loadSupafixaFeed, offerDraft } from './supafixa'
 import type {
   DateWindow,
   Engagement,
@@ -68,6 +70,8 @@ export default function App() {
   const [profileBoot, setProfileBoot] = useState<ProfileBoot>('ready')
   const [bootTarget, setBootTarget] = useState<ProfileId>(initialProfile)
   const [bootFading, setBootFading] = useState(false)
+  const [pageBoot, setPageBoot] = useState<'loading' | 'ready'>('loading')
+  const [pageFading, setPageFading] = useState(false)
   const [requested, setRequested] = useState<ProfileId[]>([])
   const [accountOpen, setAccountOpen] = useState(false)
   const [clientReviews, setClientReviews] = useState<ClientReview[]>(CLIENT_REVIEWS)
@@ -106,6 +110,7 @@ export default function App() {
   const toastTimer = useRef(0)
   const bootGen = useRef(0)
   const fadeTimer = useRef(0)
+  const pageFade = useRef(0)
 
   const setLang = useCallback((next: Lang) => {
     setLangState(next)
@@ -114,7 +119,7 @@ export default function App() {
 
   const profile = profileById(profileId)
   const reports = useMemo(() => buildReports([...CLIENT_ADDRESSES, ...extraAddresses], clientReviews), [extraAddresses, clientReviews])
-  const booting = profileBoot === 'loading'
+  const booting = profileBoot === 'loading' || pageBoot === 'loading'
 
   const i18n = useMemo(() => makeI18n(lang, setLang), [lang, setLang])
   const { t } = i18n
@@ -141,6 +146,45 @@ export default function App() {
     seq.current += 1
     if (next.kind === 'home') setFrame({ seq: seq.current, kind: 'home' })
     else setFrame({ ...next, seq: seq.current })
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    const started = Date.now()
+    const titleFor = (kind: 'job' | 'worker' | 'company', trade: string) => postTitle(kind, trade, lang)
+    void (async () => {
+      let error = ''
+      let added = 0
+      try {
+        const feed = await loadSupafixaFeed()
+        const records: MarketplaceRecord[] = []
+        for (const item of feed.items) {
+          const draft = offerDraft(item, t('import.contactRemoved'), t('splash.summary'), titleFor)
+          const where = placeByName(draft.place)
+          if (!where) continue
+          importSeq.current += 1
+          records.push(draftToRecord(draft, where, importSeq.current))
+        }
+        added = records.length
+        if (!cancelled && records.length) setImported((prev) => [...prev, ...records])
+      } catch (reason) {
+        error = reason instanceof Error ? reason.message : String(reason)
+      }
+      const wait = 2600 - (Date.now() - started)
+      if (wait > 0) await new Promise((done) => setTimeout(done, wait))
+      if (cancelled) return
+      if (added) notify(t('toast.supafixa', { n: added }))
+      else if (error) notify(t('toast.supafixaFail', { msg: error }))
+      setPageBoot('ready')
+      setPageFading(true)
+      window.clearTimeout(pageFade.current)
+      pageFade.current = window.setTimeout(() => setPageFading(false), 280)
+    })()
+    return () => {
+      cancelled = true
+    }
+    // First paint only: splash + live offer fetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const filter = useMemo<FilterState>(
@@ -203,6 +247,7 @@ export default function App() {
     return () => {
       window.removeEventListener('keydown', onKey)
       window.clearTimeout(fadeTimer.current)
+      window.clearTimeout(pageFade.current)
     }
   }, [])
 
@@ -373,7 +418,7 @@ export default function App() {
     setDrawerOpen(true)
     setNavOpen(false)
     if (view !== 'saved') setView('map')
-    pushFrame({ kind: 'point', lat: record.lat, lng: record.lng, zoom: 14 })
+    pushFrame({ kind: 'point', lat: record.lat, lng: record.lng, zoom: 15 })
   }
 
   const reveal = (record: MarketplaceRecord, message: string) => {
@@ -385,7 +430,7 @@ export default function App() {
     setDrawerOpen(true)
     setSheetOpen(true)
     setNavOpen(false)
-    pushFrame({ kind: 'point', lat: record.lat, lng: record.lng, zoom: 14 })
+    pushFrame({ kind: 'point', lat: record.lat, lng: record.lng, zoom: 15 })
     notify(message)
   }
 
@@ -569,6 +614,7 @@ export default function App() {
             setNavOpen(false)
             setAccountOpen(true)
           }}
+          onSwitch={switchProfile}
           locked={booting}
         />
         <main id="main-content" className="main" tabIndex={-1} inert={booting || undefined}>
@@ -798,7 +844,10 @@ export default function App() {
             onClose={() => setAccountOpen(false)}
           />
         )}
-        {(booting || bootFading) && <ProfileLoadingScreen profileId={bootTarget} fading={bootFading} />}
+        {(pageBoot === 'loading' || pageFading) && <DumpTruckLoader page fading={pageFading} />}
+        {(profileBoot === 'loading' || bootFading) && pageBoot === 'ready' && !pageFading && (
+          <DumpTruckLoader profileId={bootTarget} fading={bootFading} />
+        )}
       </div>
     </I18nContext.Provider>
   )

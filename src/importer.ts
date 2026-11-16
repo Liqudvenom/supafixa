@@ -35,6 +35,7 @@ export const SOURCES = [
     host: /^(?:www\.)?facebook\.com$/,
     path: /^\/groups\/pracawlondynie(?:\/|$)/,
   },
+  { name: 'Supafixa', host: /(^|\.)supafixa\.com$/, path: /^\/oferty(?:\/|$)/ },
 ]
 
 export function sourceOf(url: string) {
@@ -55,18 +56,38 @@ const TRADE_KEYS: [string, string[]][] = [
   ['Drylining', ['regips', 'karton gips', 'karton-gips', 'suche zabudow', 'dryline', 'drylin', 'plyt gk', 'plyty gk']],
   ['Plumbing', ['hydraulik', 'plumb', 'instalacj wod']],
   ['Electrical', ['elektryk', 'electric', 'sparky']],
-  ['Painting & decorating', ['malarz', 'malark', 'malowan', 'painter', 'decorat', 'dekorat']],
+  ['Painting & decorating', ['malarz', 'malark', 'malowan', 'painter', 'decorat', 'dekorat', 'sprejarz', 'lakiernik']],
   ['Tiling', ['glazurni', 'plytk', 'kafelk', 'kafelkarz', 'tiler', 'tiling']],
   ['Plastering', ['tynk', 'gladz', 'plaster', 'skim']],
   ['Roofing', ['dekarz', 'dekarsk', 'dachu', 'dachy', 'roof']],
-  ['Groundworks', ['ziemn', 'wykop', 'groundwork', 'drenaz', 'kanalizac']],
+  ['Groundworks', ['ziemn', 'wykop', 'groundwork', 'drenaz', 'kanalizac', 'operator kopark', 'brukarz', 'brukar']],
   ['Cleaning', ['sprzata', 'clean']],
   ['Transport', ['kierowc', 'driver', 'transport', 'przeprowadz', 'z busem', 'busem']],
   ['Carpentry', ['stolarz', 'stolark', 'ciesl', 'carpent', 'joiner']],
   ['Brickwork', ['murarz', 'murowan', 'bricklay', 'brickwork', 'cegl']],
   ['Renovation', ['remont', 'wykonczen', 'renovat', 'refurb', 'ekipa', 'ekipe']],
   ['Labour', ['pomocnik', 'pomocnic', 'labour', 'labor', 'pomoc na budow', 'pomocy na budow', 'general builder']],
-  ['Construction', ['ogolnobudowl', 'budowlaniec', 'handyman', 'multi trad', 'multitrad', 'kierownik budowy', 'site manager']],
+  [
+    'Construction',
+    [
+      'ogolnobudowl',
+      'budowlaniec',
+      'handyman',
+      'multi trad',
+      'multitrad',
+      'kierownik budowy',
+      'site manager',
+      'foreman',
+      'monter stali',
+      'monter elew',
+      'ogrodnik',
+      'landscap',
+      'kamieniarz',
+      'szklarz',
+      'mechanik',
+      'blacharz',
+    ],
+  ],
 ]
 
 const WORKER_CUES = [

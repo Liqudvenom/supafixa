@@ -87,6 +87,7 @@ export function MapCanvas({
   const houseRef = useRef<L.LayerGroup | null>(null)
   const selectRef = useRef(onSelect)
   const addressRef = useRef(onAddress)
+  const focusRef = useRef<L.Marker | null>(null)
 
   useEffect(() => {
     selectRef.current = onSelect
@@ -105,6 +106,7 @@ export function MapCanvas({
       maxBounds: L.latLngBounds([51.18, -0.72], [51.8, 0.45]),
       maxBoundsViscosity: 0.65,
     }).setView([LONDON.lat, LONDON.lng], LONDON.zoom)
+    map.attributionControl.setPrefix(false)
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -194,6 +196,7 @@ export function MapCanvas({
     const group = clusterRef.current
     if (!group) return
     group.clearLayers()
+    focusRef.current = null
     const markers = records.map((record) => {
       const view = i18n.view(record)
       const marker = L.marker([record.lat, record.lng], {
@@ -202,11 +205,15 @@ export function MapCanvas({
         riseOnHover: true,
         keyboard: false,
       })
+      const selected = record.id === selectedId
+      if (selected) focusRef.current = marker
+      marker.setZIndexOffset(selected ? 1600 : 0)
       marker.bindTooltip(`<strong>${esc(view.title)}</strong><span>${esc(record.location)} · ${esc(view.payLabel)}</span>`, {
         className: 'tt-tip',
         direction: 'top',
-        offset: [0, -14],
+        offset: [0, -18],
         opacity: 1,
+        permanent: selected,
       })
       marker.on('click', () => selectRef.current(record.id))
       return marker
@@ -268,7 +275,21 @@ export function MapCanvas({
       return
     }
     if (frame.kind === 'point') {
-      map.flyTo([frame.lat, frame.lng], frame.zoom, { duration: 0.7 })
+      const stage = elRef.current?.closest('.stage')
+      const sheet = stage ? Number.parseFloat(getComputedStyle(stage).getPropertyValue('--sheet-space')) || 0 : 0
+      const drawerEl = stage?.querySelector('.drawer')
+      const drawer =
+        drawerEl instanceof HTMLElement && window.innerWidth > 760 ? drawerEl.getBoundingClientRect().width + 28 : 0
+      const size = map.getSize()
+      const zoom = frame.zoom
+      const projected = map.project([frame.lat, frame.lng], zoom)
+      const desiredX = (size.x - drawer) / 2
+      const visibleBottom = Math.max(96, size.y - sheet)
+      const desiredY = Math.max(64, visibleBottom * 0.46)
+      const shift = L.point(desiredX - size.x / 2, desiredY - size.y / 2)
+      const reveal = () => focusRef.current?.openTooltip()
+      map.once('moveend', reveal)
+      map.flyTo(map.unproject(projected.subtract(shift), zoom), zoom, { duration: 0.7 })
       return
     }
     const bounds = L.latLng(frame.lat, frame.lng).toBounds(frame.radiusKm * 2200)
