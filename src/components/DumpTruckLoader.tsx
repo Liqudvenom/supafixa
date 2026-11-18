@@ -53,10 +53,10 @@ export function DumpTruckLoader({ profileId = 'seller', fading, page }: Props) {
           <div className="progress-box">
             <div className="progress-fill" />
           </div>
+          <div className="progress-state state-load">{t('splash.loading')}</div>
+          <div className="progress-state state-finish">{t('splash.done')}</div>
         </div>
         <Truck />
-        <div className="progress-state state-load">{t('splash.loading')}</div>
-        <div className="progress-state state-finish">{t('splash.done')}</div>
       </div>
       <h2>{title}</h2>
       <p>{sub}</p>

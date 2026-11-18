@@ -7,5 +7,6 @@ import { supafixaFeed } from './dev/supafixaFeed.ts'
 export default defineConfig({
   // Project site is https://<user>.github.io/supafixa/ — only the Pages build needs that prefix.
   base: process.env.GITHUB_PAGES ? '/supafixa/' : '/',
+  server: { port: 5183, strictPort: true },
   plugins: [react(), londynekFeed(), supafixaFeed()],
 })

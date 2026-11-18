@@ -170,7 +170,7 @@ export default function App() {
       } catch (reason) {
         error = reason instanceof Error ? reason.message : String(reason)
       }
-      const wait = 2600 - (Date.now() - started)
+      const wait = 4000 - (Date.now() - started)
       if (wait > 0) await new Promise((done) => setTimeout(done, wait))
       if (cancelled) return
       if (added) notify(t('toast.supafixa', { n: added }))

@@ -118,9 +118,9 @@ h1, h2, h3, p { margin: 0; }
   --dump-lgy: rgb(160, 160, 160);
   --dump-br: rgb(127, 91, 88);
   position: relative;
-  width: min(28.5em, 94vw);
-  height: 12.2em;
-  font-size: clamp(13px, 3.1vw, 18px);
+  width: min(42em, 96vw);
+  height: 16em;
+  font-size: clamp(14px, 2.1vw, 20px);
   overflow: hidden;
 }
 .dump-scene .progress-container,
@@ -132,9 +132,9 @@ h1, h2, h3, p { margin: 0; }
 .dump-scene .progress-container,
 .dump-scene .progress-box { width: 6em; }
 .dump-scene .progress-container {
-  top: 3.5em;
-  left: 3.6em;
-  height: 4em;
+  top: 50%;
+  left: calc(50% - 3em);
+  height: 7.5em;
   z-index: 2;
 }
 .dump-scene .progress-box {
@@ -150,31 +150,32 @@ h1, h2, h3, p { margin: 0; }
   background: var(--dump-dbr);
   transform: scaleY(0);
   transform-origin: 50% 100%;
-  animation: dumpFill 2.2s ease-out forwards;
+  animation: dumpFill 3.6s linear forwards;
 }
 .dump-scene .progress-state {
   bottom: 0;
-  left: 0;
-  width: 100%;
-  font-size: 1.05em;
+  left: 50%;
+  width: max-content;
+  transform: translateX(-50%);
+  font-size: 1.15em;
   font-weight: 700;
   text-align: center;
   color: var(--wine);
-  z-index: 3;
+  white-space: nowrap;
 }
-.dump-scene .state-load { animation: dumpHideLoad 2.2s linear forwards; }
+.dump-scene .state-load { animation: dumpHideLoad 3.6s linear forwards; }
 .dump-scene .state-finish {
   visibility: hidden;
-  animation: dumpShowFinish 0.28s 2.2s linear forwards;
+  animation: dumpShowFinish 0.3s 3.2s linear forwards;
 }
 .dump-scene .dump-truck {
-  top: 0.15em;
-  left: 10.2em;
+  top: calc(50% - 4em);
+  left: 50%;
   width: 14em;
   height: 8em;
   opacity: 0;
   z-index: 1;
-  animation: dumpArrive 2.2s ease-in-out forwards;
+  animation: dumpArrive 3.6s ease-in-out forwards;
 }
 .dump-scene .front {
   background:
@@ -205,7 +206,7 @@ h1, h2, h3, p { margin: 0; }
   width: 10em;
   height: 5.5em;
   transform-origin: 22% 100%;
-  animation: dumpBucket 2.2s linear forwards;
+  animation: dumpBucket 3.6s linear forwards;
 }
 .dump-scene .dirt {
   background: var(--dump-dbr);
@@ -217,7 +218,7 @@ h1, h2, h3, p { margin: 0; }
   transform: rotate(-25deg);
   transform-origin: 50% 0;
   z-index: -1;
-  animation: dumpRotateDirt 2.2s linear forwards;
+  animation: dumpRotateDirt 3.6s linear forwards;
 }
 .dump-scene .dirt-spill {
   background: var(--dump-dbr);
@@ -228,7 +229,7 @@ h1, h2, h3, p { margin: 0; }
   height: 0.8em;
   transform: rotate(-40deg) scale(1, 1);
   transform-origin: 5.25em 0;
-  animation: dumpPour 2.2s linear forwards;
+  animation: dumpPour 3.6s linear forwards;
 }
 .dump-scene .base {
   background: var(--dump-br);
@@ -248,37 +249,36 @@ h1, h2, h3, p { margin: 0; }
   bottom: 0;
   width: 2.4em;
   height: 2.4em;
-  animation: dumpSpin 2.2s ease-in-out forwards;
+  animation: dumpSpin 3.6s ease-in-out forwards;
 }
 .dump-scene .wheel-front { left: 10.4em; }
 .dump-scene .wheel-middle { left: 4.5em; }
 .dump-scene .wheel-back { left: 2em; }
 @keyframes dumpArrive {
-  from, 8% { opacity: 0; transform: translateX(16em); }
-  28%, to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(18em); }
+  14%, to { opacity: 1; transform: translateX(5em); }
 }
 @keyframes dumpBucket {
-  from, 28%, 72%, to { transform: rotate(0deg); }
-  38%, 58% { transform: rotate(-28deg); }
+  from, 16%, 42%, to { transform: rotate(0deg); }
+  24%, 34% { transform: rotate(-40deg); }
 }
 @keyframes dumpRotateDirt {
-  from, 37%, 62%, to { opacity: 0; }
-  38%, 58% { opacity: 1; transform: rotate(-28deg); }
-  48% { transform: rotate(-25deg); }
+  from, 22%, 36%, to { opacity: 0; }
+  24%, 34% { opacity: 1; transform: rotate(-40deg); }
+  29% { transform: rotate(-25deg); }
 }
 @keyframes dumpPour {
-  from, 38% { transform: rotate(-28deg) scale(0, 0); }
-  46% { transform: rotate(-28deg) scale(1, 1); }
-  58%, to { transform: rotate(-25deg) scale(0.8, 0); }
+  from, 24% { transform: rotate(-40deg) scale(0, 0); }
+  29% { transform: rotate(-40deg) scale(1, 1); }
+  36%, to { transform: rotate(-25deg) scale(0.8, 0); }
 }
 @keyframes dumpSpin {
   from { transform: rotate(0); }
-  28%, to { transform: rotate(-2.1turn); }
+  14%, to { transform: rotate(-2turn); }
 }
 @keyframes dumpFill {
-  from { transform: scaleY(0); }
-  32% { transform: scaleY(0.12); }
-  to { transform: scaleY(1); }
+  from, 16% { transform: scaleY(0); }
+  42%, to { transform: scaleY(1); }
 }
 @keyframes dumpHideLoad {
   from { visibility: visible; }
